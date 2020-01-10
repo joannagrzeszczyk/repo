@@ -1,0 +1,48 @@
+def conv_layer(prev_layer, channel_num, pic_dim, filter_num):
+    
+    w = tf.Variable(tf.truncated_normal([pic_dim, pic_dim, channel_num, filter_num]))
+    b = tf.Variable(tf.constant(0.05, shape=[filter_num]))
+    
+    layer = tf.nn.conv2d(input=prev_layer,
+                         filter=w,
+                         strides=[1,2,2,1],
+                         padding='SAME')
+    layer += b
+    
+    layer = tf.nn.relu(tf.nn.max_pool(value=layer,
+                           ksize=[1,2,2,1],
+                           strides=[1,2,2,1],
+                           padding='SAME'))
+    return layer
+
+def flatten_layer(prev_layer):
+    
+    new_dim  = [-1, prev_layer.get_shape()[1:].num_elements()]
+    layer = tf.reshape(prev_layer, new_dim)
+    
+    return layer, new_dim
+
+def fully_connected_layer(prev_layer, input_dim, output_dim):
+    
+    w = tf.Variable(tf.truncated_normal([input_dim, output_dim]))
+    b = tf.constant(0.05, shape=[output_dim])
+    layer = tf.nn.relu(tf.matmul(prev_layer,w) + b)
+    
+    return layer
+
+
+filter_size1 = 5         
+num_filters1 = 16        
+
+filter_size2 = 5         
+num_filters2 = 36        
+
+img_size = 28
+number_of_channels = 1
+
+X = tf.placeholder(tf.float32, [None, img_size*img_size], name='X')
+input_X = tf.reshape(X, [-1, img_size, img_size, number_of_channels])
+y_t = tf.placeholder(tf.float32, [None, class_num])
+
+conv_layer1 = conv_layer(input_X, number_of_channels, filter_size1, num_filters1)
+conv_layer2 = conv_layer(conv_layer1, num_filters1, filter_size2, num_filters2)
